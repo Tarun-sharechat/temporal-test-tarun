@@ -1,0 +1,149 @@
+# Source: temporal/templates/server-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: temporal-history-service-headless
+  namespace: temporal-test-tarun
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.18.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: 1.18.0
+    app.kubernetes.io/component: history
+    app.kubernetes.io/part-of: temporal
+    app.kubernetes.io/headless: 'true'
+    prometheus.io/job: temporal-history
+    prometheus.io/scrape: 'true'
+    prometheus.io/scheme: http
+    prometheus.io/port: "9090"
+
+  annotations:
+    # Use this annotation in addition to the actual field below because the
+    # annotation will stop being respected soon but the field is broken in
+    # some versions of Kubernetes:
+    # https://github.com/kubernetes/kubernetes/issues/58662
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - port: 7234
+      targetPort: rpc
+      protocol: TCP
+      name: grpc-rpc
+    - port: 9090
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: temporal
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/component: history
+---
+# Source: temporal/templates/server-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: temporal-history-service
+  namespace: temporal-test-tarun
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.18.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: 1.18.0
+    app.kubernetes.io/component: history
+    app.kubernetes.io/part-of: temporal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: temporal
+      app.kubernetes.io/instance: temporal
+      app.kubernetes.io/component: history
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: temporal
+        helm.sh/chart: temporal-0.18.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/instance: temporal
+        app.kubernetes.io/version: 1.18.0
+        app.kubernetes.io/component: history
+        app.kubernetes.io/part-of: temporal
+        app: temporal-history-service
+        team: engineering
+        cloud: oci
+        component: service
+        entity: moj
+        environment: stage
+        pod: visual-tech-ai
+        platform: moj
+        service: temporal-history-service
+        id: temporal-history-service
+      annotations:
+        checksum/config: 5f88e5e986d7b73bbe29db654242a1a15bf42cf2f0ca99de93cbb5d086da7849
+        prometheus.io/job: temporal-history
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+    spec:
+      containers:
+        - name: temporal-history
+          image: "temporalio/server:1.22.2"
+          imagePullPolicy: Always
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: ENABLE_ES
+              value: ""
+            - name: ES_SEEDS
+              value: "elasticsearch-master-headless"
+            - name: ES_PORT
+              value: "9200"
+            - name: ES_VERSION
+              value: "v7"
+            - name: ES_SCHEME
+              value: "http"
+            - name: ES_VIS_INDEX
+              value: "temporal_visibility_v1_dev"
+            - name: ES_USER
+              value: ""
+            - name: ES_PWD
+              value: ""
+            - name: SERVICES
+              value: history
+          ports:
+            - name: rpc
+              containerPort: 7234
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 150
+            tcpSocket:
+              port: rpc
+          volumeMounts:
+            - name: config
+              mountPath: /etc/temporal/config/config_template.yaml
+              subPath: config_template.yaml
+            - name: dynamic-config
+              mountPath: /etc/temporal/dynamic_config
+          resources:
+            {}
+      volumes:
+        - name: config
+          configMap:
+            name: "temporal-history-service-config"
+        - name: dynamic-config
+          configMap:
+            name: "temporal-dynamic-config"
+            items:
+            - key: dynamic_config.yaml
+              path: dynamic_config.yaml
+---
+# autoscaling missing
