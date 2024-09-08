@@ -1,0 +1,482 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "temporal-dynamic-config"
+  namespace: temporal-test-tarun
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.18.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: 1.18.0
+    app.kubernetes.io/part-of: temporal
+data:
+  dynamic_config.yaml: |-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "temporal-frontend-service-config"
+  namespace: temporal-test-tarun
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.18.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: 1.18.0
+    app.kubernetes.io/part-of: temporal
+data:
+  config_template.yaml: |-
+    log:
+      stdout: true
+      level: "debug,info,error"
+
+    persistence:
+        default:
+          driver: "sql"
+          sql:
+            driver: "postgres14"
+            host: 10.176.105.122
+            port: 5432
+            database: temporal
+            user: test_admin
+            password: Testadmin@123
+            maxConns: 20
+            maxConnLifetime: "1h"
+        visibility:
+          driver: "sql"
+          sql:
+            driver: "postgres14"
+            host: 10.176.105.122
+            port: 5432
+            database: temporal_visibility
+            user: test_admin
+            password: Testadmin@123
+            maxConns: 20
+            maxConnLifetime: "1h"
+
+    global:
+      membership:
+        name: temporal
+        maxJoinDuration: 30s
+        broadcastAddress: {{ default .Env.POD_IP "0.0.0.0" }}
+
+      pprof:
+        port: 7936
+    
+      metrics:
+        tags:
+          type: frontend
+        prometheus:
+          timerType: histogram
+          listenAddress: "0.0.0.0:9090"
+
+
+    services:
+      frontend:
+        rpc:
+          grpcPort: 7233
+          membershipPort: 6933
+          bindOnIP: "0.0.0.0"
+
+      history:
+        rpc:
+          grpcPort: 7234
+          membershipPort: 6934
+          bindOnIP: "0.0.0.0"
+
+      matching:
+        rpc:
+          grpcPort: 7235
+          membershipPort: 6935
+          bindOnIP: "0.0.0.0"
+
+      worker:
+        rpc:
+          grpcPort: 7239
+          membershipPort: 6939
+          bindOnIP: "0.0.0.0"
+    clusterMetadata:
+      enableGlobalDomain: false
+      failoverVersionIncrement: 10
+      masterClusterName: "active"
+      currentClusterName: "active"
+      clusterInformation:
+        active:
+          enabled: true
+          initialFailoverVersion: 1
+          rpcName: "temporal-test-tarun-frontend"
+          rpcAddress: "127.0.0.1:7933"
+
+    dcRedirectionPolicy:
+      policy: "noop"
+      toDC: ""
+
+    archival:
+      status: "enabled"
+
+    publicClient:
+      hostPort: "temporal-test-tarun-frontend-service:7233"
+
+    dynamicConfigClient:
+      filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"
+      pollInterval: "10s"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "temporal-history-service-config"
+  namespace: temporal-test-tarun
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.18.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: 1.18.0
+    app.kubernetes.io/part-of: temporal
+data:
+  config_template.yaml: |-
+    log:
+      stdout: true
+      level: "debug,info,error"
+
+    persistence:
+        default:
+          driver: "sql"
+          sql:
+            driver: "postgres14"
+            host: 10.176.105.122
+            port: 5432
+            database: temporal
+            user: test_admin
+            password: Testadmin@123
+            maxConns: 20
+            maxConnLifetime: "1h"
+        visibility:
+          driver: "sql"
+          sql:
+            driver: "postgres14"
+            host: 10.176.105.122
+            port: 5432
+            database: temporal_visibility
+            user: test_admin
+            password: Testadmin@123
+            maxConns: 20
+            maxConnLifetime: "1h"
+
+    global:
+      membership:
+        name: temporal
+        maxJoinDuration: 30s
+        broadcastAddress: {{ default .Env.POD_IP "0.0.0.0" }}
+
+      pprof:
+        port: 7936
+    
+      metrics:
+        tags:
+          type: history
+        prometheus:
+          timerType: histogram
+          listenAddress: "0.0.0.0:9090"
+
+
+    services:
+      frontend:
+        rpc:
+          grpcPort: 7233
+          membershipPort: 6933
+          bindOnIP: "0.0.0.0"
+
+      history:
+        rpc:
+          grpcPort: 7234
+          membershipPort: 6934
+          bindOnIP: "0.0.0.0"
+
+      matching:
+        rpc:
+          grpcPort: 7235
+          membershipPort: 6935
+          bindOnIP: "0.0.0.0"
+
+      worker:
+        rpc:
+          grpcPort: 7239
+          membershipPort: 6939
+          bindOnIP: "0.0.0.0"
+    clusterMetadata:
+      enableGlobalDomain: false
+      failoverVersionIncrement: 10
+      masterClusterName: "active"
+      currentClusterName: "active"
+      clusterInformation:
+        active:
+          enabled: true
+          initialFailoverVersion: 1
+          rpcName: "temporal-frontend"
+          rpcAddress: "127.0.0.1:7933"
+
+    dcRedirectionPolicy:
+      policy: "noop"
+      toDC: ""
+
+    archival:
+      status: "enabled"
+
+    publicClient:
+      hostPort: "temporal-frontend-service:7233"
+
+    dynamicConfigClient:
+      filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"
+      pollInterval: "10s"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "temporal-matching-service-config"
+  namespace: temporal-test-tarun
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.18.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: 1.18.0
+    app.kubernetes.io/part-of: temporal
+data:
+  config_template.yaml: |-
+    log:
+      stdout: true
+      level: "debug,info,error"
+
+    persistence:
+        default:
+          driver: "sql"
+          sql:
+            driver: "postgres14"
+            host: 10.176.105.122
+            port: 5432
+            database: temporal
+            user: test_admin
+            password: Testadmin@123
+            maxConns: 20
+            maxConnLifetime: "1h"
+        visibility:
+          driver: "sql"
+          sql:
+            driver: "postgres14"
+            host: 10.176.105.122
+            port: 5432
+            database: temporal_visibility
+            user: test_admin
+            password: Testadmin@123
+            maxConns: 20
+            maxConnLifetime: "1h"
+
+    global:
+      membership:
+        name: temporal
+        maxJoinDuration: 30s
+        broadcastAddress: {{ default .Env.POD_IP "0.0.0.0" }}
+
+      pprof:
+        port: 7936
+    
+      metrics:
+        tags:
+          type: matching
+        prometheus:
+          timerType: histogram
+          listenAddress: "0.0.0.0:9090"
+
+
+    services:
+      frontend:
+        rpc:
+          grpcPort: 7233
+          membershipPort: 6933
+          bindOnIP: "0.0.0.0"
+
+      history:
+        rpc:
+          grpcPort: 7234
+          membershipPort: 6934
+          bindOnIP: "0.0.0.0"
+
+      matching:
+        rpc:
+          grpcPort: 7235
+          membershipPort: 6935
+          bindOnIP: "0.0.0.0"
+
+      worker:
+        rpc:
+          grpcPort: 7239
+          membershipPort: 6939
+          bindOnIP: "0.0.0.0"
+    clusterMetadata:
+      enableGlobalDomain: false
+      failoverVersionIncrement: 10
+      masterClusterName: "active"
+      currentClusterName: "active"
+      clusterInformation:
+        active:
+          enabled: true
+          initialFailoverVersion: 1
+          rpcName: "temporal-frontend"
+          rpcAddress: "127.0.0.1:7933"
+
+    dcRedirectionPolicy:
+      policy: "noop"
+      toDC: ""
+
+    archival:
+      status: "enabled"
+
+    publicClient:
+      hostPort: "temporal-frontend-service:7233"
+
+    dynamicConfigClient:
+      filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"
+      pollInterval: "10s"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: temporal-web-service-config
+  namespace: temporal-test-tarun
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.18.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: 1.18.0
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: temporal
+  annotations:
+    cloud.google.com/neg: '{"exposed_ports":{"8080":{}}}'
+data:
+  config.yml: |
+    auth:
+      enabled: false
+      providers:
+          - label: 'Auth0 oidc'
+            type: oidc
+            issuer: https://myorg.us.auth0.com
+            client_id: 3572872517-u38qcu95rmk102uapu0fmqi4561mssgn.apps.googleusercontent.com
+            client_secret: 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
+            scope: email
+            callback_base_uri: https://temporal-service-moj.sharechat.com/
+            pass_id_token: false
+    routing:
+      default_to_namespace: null
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "temporal-worker-service-config"
+  namespace: temporal-test-tarun
+  labels:
+    app.kubernetes.io/name: temporal
+    helm.sh/chart: temporal-0.18.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/instance: temporal
+    app.kubernetes.io/version: 1.18.0
+    app.kubernetes.io/part-of: temporal
+data:
+  config_template.yaml: |-
+    log:
+      stdout: true
+      level: "debug,info,error"
+
+      persistence:
+        default:
+          driver: "sql"
+          sql:
+            driver: "postgres14"
+            host: 10.176.105.122
+            port: 5432
+            database: temporal
+            user: test_admin
+            password: Testadmin@123
+            maxConns: 20
+            maxConnLifetime: "1h"
+        visibility:
+          driver: "sql"
+          sql:
+            driver: "postgres14"
+            host: 10.176.105.122
+            port: 5432
+            database: temporal_visibility
+            user: test_admin
+            password: Testadmin@123
+            maxConns: 20
+            maxConnLifetime: "1h"
+
+
+    global:
+      membership:
+        name: temporal
+        maxJoinDuration: 30s
+        broadcastAddress: {{ default .Env.POD_IP "0.0.0.0" }}
+
+      pprof:
+        port: 7936
+    
+      metrics:
+        tags:
+          type: worker
+        prometheus:
+          timerType: histogram
+          listenAddress: "0.0.0.0:9090"
+
+
+    services:
+      frontend:
+        rpc:
+          grpcPort: 7233
+          membershipPort: 6933
+          bindOnIP: "0.0.0.0"
+
+      history:
+        rpc:
+          grpcPort: 7234
+          membershipPort: 6934
+          bindOnIP: "0.0.0.0"
+
+      matching:
+        rpc:
+          grpcPort: 7235
+          membershipPort: 6935
+          bindOnIP: "0.0.0.0"
+
+      worker:
+        rpc:
+          grpcPort: 7239
+          membershipPort: 6939
+          bindOnIP: "0.0.0.0"
+    clusterMetadata:
+      enableGlobalDomain: false
+      failoverVersionIncrement: 10
+      masterClusterName: "active"
+      currentClusterName: "active"
+      clusterInformation:
+        active:
+          enabled: true
+          initialFailoverVersion: 1
+          rpcName: "temporal-frontend"
+          rpcAddress: "127.0.0.1:7933"
+
+    dcRedirectionPolicy:
+      policy: "noop"
+      toDC: ""
+
+    archival:
+      status: "enabled"
+
+    publicClient:
+      hostPort: "temporal-frontend-service:7233"
+
+    dynamicConfigClient:
+      filepath: "/etc/temporal/dynamic_config/dynamic_config.yaml"
+      pollInterval: "10s"
