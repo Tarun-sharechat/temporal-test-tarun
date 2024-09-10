@@ -133,6 +133,9 @@ spec:
               subPath: config_template.yaml
             - name: dynamic-config
               mountPath: /etc/temporal/dynamic_config
+            - name: ca-cert-volume
+              mountPath: /etc/ssl/certs/CaCertificate-temporal-test-db.pub
+              subPath: CaCertificate-temporal-test-db.pub
           resources:
             {}
       volumes:
@@ -145,5 +148,8 @@ spec:
             items:
             - key: dynamic_config.yaml
               path: dynamic_config.yaml
+        - name: ca-cert-volume
+          configMap:
+            name: temporal-db-cert
 ---
 # autoscaling missing

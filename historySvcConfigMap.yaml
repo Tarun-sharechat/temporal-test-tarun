@@ -32,6 +32,10 @@ data:
             maxConns: 20
             maxIdleConns: 20
             maxConnLifetime: "1h"
+            tls:
+              enabled: true
+              caFile: 
+              enableHostVerification: false
         visibility:
           sql:
             pluginName: "postgres"
@@ -43,6 +47,36 @@ data:
             maxConns: 10
             maxIdleConns: 10
             maxConnLifetime: "1h"
+            tls:
+              enabled: true
+              caFile: 
+              enableHostVerification: false
+    
+    cassandra:
+      enabled: false
+
+    mysql:
+      enabled: false
+
+    postgresql:
+      enabled: true
+
+    prometheus:
+      enabled: true
+
+    grafana:
+      enabled: true
+
+    elasticsearch:
+      enabled: true
+
+    schema:
+      createDatabase:
+        enabled: true
+      setup:
+        enabled: false
+      update:
+        enabled: false
 
     global:
       membership:
