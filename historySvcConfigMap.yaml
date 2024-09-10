@@ -34,7 +34,7 @@ data:
             maxConnLifetime: "1h"
             tls:
               enabled: true
-              caFile: 
+              caFile: "/etc/ssl/certs/CaCertificate-temporal-test-db.pub"
               enableHostVerification: false
         visibility:
           sql:
@@ -49,7 +49,7 @@ data:
             maxConnLifetime: "1h"
             tls:
               enabled: true
-              caFile: 
+              caFile: "/etc/ssl/certs/CaCertificate-temporal-test-db.pub"
               enableHostVerification: false
     
     cassandra:
