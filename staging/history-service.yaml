@@ -152,20 +152,19 @@ spec:
           configMap:
             name: temporal-db-cert
 ---
-apiVersion: autoscaling/v2beta1
-kind: HorizontalPodAutoscaler
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
 metadata:
-  name: temporal-history-service
-  namespace: temporal-test-tarun
+ name: temporal-history-service
+ namespace: temporal-test-tarun
 spec:
-  minReplicas: 1
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: 50
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
+ scaleTargetRef:
     name: temporal-history-service
+ pollingInterval: 60
+ minReplicaCount: 1
+ maxReplicaCount: 10
+ triggers:
+ - type: cpu
+   metadata:
+     value: '50'
+     type: Utilization
